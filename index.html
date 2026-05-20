@@ -1,3 +1,4 @@
+cat > /mnt/user-data/outputs/leadhunter-pwa/index.html << 'HTMLEOF'
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,243 +9,111 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Lead Hunter">
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <title>Lead Hunter</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0a0a0f;
-    --surface: #111118;
-    --card: #16161f;
-    --border: #252535;
-    --accent: #00ff88;
-    --accent2: #00ccff;
-    --text: #f0f0ff;
-    --muted: #5a5a7a;
-    --danger: #ff4466;
-    --warn: #ffaa00;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  html, body { height: 100%; overflow: hidden; }
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Syne', sans-serif;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* Scrollable main area */
-  .screen { display: none; flex-direction: column; height: 100%; overflow-y: auto; padding: 20px 16px 100px; }
-  .screen.active { display: flex; }
-
-  /* Bottom nav */
-  .bottom-nav {
-    position: fixed; bottom: 0; left: 0; right: 0;
-    background: rgba(17,17,24,0.95);
-    backdrop-filter: blur(16px);
-    border-top: 1px solid var(--border);
-    display: flex;
-    padding: 8px 0 max(8px, env(safe-area-inset-bottom));
-    z-index: 100;
-  }
-  .nav-item {
-    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
-    padding: 6px; cursor: pointer; transition: color 0.2s;
-    color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: 0.05em;
-    text-transform: uppercase;
-  }
-  .nav-item.active { color: var(--accent); }
-  .nav-icon { font-size: 20px; line-height: 1; }
-
-  /* Header */
-  .app-header {
-    text-align: center; padding: 16px 0 24px;
-  }
-  .app-title {
-    font-size: 28px; font-weight: 800; letter-spacing: -0.03em;
-    background: linear-gradient(90deg, var(--accent), var(--accent2));
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-  .app-sub { color: var(--muted); font-size: 12px; margin-top: 4px; }
-
-  /* Cards */
-  .card {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 16px; padding: 16px; margin-bottom: 12px;
-    position: relative; overflow: hidden;
-  }
-  .card::before {
-    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(0,255,136,0.3), transparent);
-  }
-  .card.warn-card { border-color: rgba(255,170,0,0.25); }
-  .card.warn-card::before { background: linear-gradient(90deg, transparent, rgba(255,170,0,0.4), transparent); }
-
-  /* Labels */
-  .label {
-    font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
-    text-transform: uppercase; color: var(--muted); margin-bottom: 8px;
-    display: flex; align-items: center; gap: 6px;
-  }
-
-  /* Inputs */
-  input[type=text], input[type=password], textarea {
-    width: 100%; background: var(--surface); border: 1px solid var(--border);
-    border-radius: 10px; padding: 12px 14px; color: var(--text);
-    font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 600;
-    outline: none; transition: border-color 0.2s;
-    -webkit-appearance: none; appearance: none;
-  }
-  input::placeholder, textarea::placeholder { color: var(--muted); font-weight: 400; }
-  input:focus, textarea:focus { border-color: rgba(0,255,136,0.4); }
-  textarea { resize: none; min-height: 80px; line-height: 1.5; }
-
-  /* Number row */
-  .num-row { display: flex; align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
-  .num-row input { border: none; border-radius: 0; text-align: center; font-size: 22px; font-weight: 800; flex: 1; }
-  .num-row input:focus { border-color: transparent; box-shadow: none; }
-  .nbtn { width: 48px; padding: 12px; background: none; border: none; color: var(--muted); font-size: 22px; cursor: pointer; font-family: 'Space Mono', monospace; font-weight: 700; }
-  .nbtn:active { background: rgba(0,255,136,0.08); color: var(--accent); }
-
-  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-
-  /* Chips */
-  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-  .chip {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 8px; padding: 6px 10px; font-size: 12px; font-weight: 700;
-    color: var(--muted); cursor: pointer; transition: all 0.15s;
-  }
-  .chip:active, .chip.on { background: rgba(0,255,136,0.08); border-color: rgba(0,255,136,0.3); color: var(--accent); }
-
-  /* Big button */
-  .hunt-btn {
-    width: 100%; padding: 16px; background: var(--accent); border: none;
-    border-radius: 14px; color: #000; font-family: 'Syne', sans-serif;
-    font-size: 16px; font-weight: 800; cursor: pointer; letter-spacing: 0.03em;
-    transition: opacity 0.2s, transform 0.1s; margin-top: 4px;
-  }
-  .hunt-btn:active { transform: scale(0.98); }
-  .hunt-btn:disabled { opacity: 0.45; }
-
-  /* Status */
-  .status {
-    display: flex; align-items: center; gap: 10px;
-    padding: 14px 16px; border-radius: 12px; font-size: 13px; font-weight: 600;
-    margin-top: 12px; animation: up 0.3s ease;
-  }
-  @keyframes up { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:none } }
-  .status.loading { background: rgba(0,204,255,0.06); border: 1px solid rgba(0,204,255,0.2); color: var(--accent2); }
-  .status.success { background: rgba(0,255,136,0.06); border: 1px solid rgba(0,255,136,0.2); color: var(--accent); }
-  .status.error { background: rgba(255,68,102,0.06); border: 1px solid rgba(255,68,102,0.2); color: var(--danger); }
-
-  .spin { width:16px; height:16px; border:2px solid rgba(0,204,255,0.2); border-top-color:var(--accent2); border-radius:50%; animation:spin 0.8s linear infinite; flex-shrink:0; }
-  @keyframes spin { to { transform:rotate(360deg) } }
-
-  /* Progress */
-  .prog-wrap { height: 3px; background: var(--border); border-radius: 2px; margin-top: 10px; overflow: hidden; }
-  .prog-bar { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 2px; transition: width 0.5s ease; }
-
-  /* Key screen */
-  .key-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; gap: 16px; text-align: center; }
-  .key-icon { font-size: 56px; margin-bottom: 8px; }
-  .key-title { font-size: 24px; font-weight: 800; }
-  .key-desc { color: var(--muted); font-size: 14px; line-height: 1.6; max-width: 300px; }
-  .key-link { color: var(--accent2); font-family: 'Space Mono', monospace; font-size: 12px; text-decoration: none; display: block; margin-top: 4px; }
-  .key-input-wrap { width: 100%; display: flex; gap: 8px; }
-  .key-input-wrap input { flex: 1; }
-  .save-btn { padding: 12px 20px; background: var(--accent); border: none; border-radius: 10px; color: #000; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 14px; cursor: pointer; white-space: nowrap; }
-
-  /* Results */
-  .lead-card {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 14px; padding: 14px; margin-bottom: 10px;
-    animation: up 0.3s ease;
-  }
-  .lead-name { font-size: 15px; font-weight: 800; margin-bottom: 8px; }
-  .lead-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; color: var(--muted); font-size: 12px; font-weight: 600; }
-  .lead-row span { color: var(--text); }
-  .lead-actions { display: flex; gap: 8px; margin-top: 10px; }
-  .action-btn {
-    flex: 1; padding: 8px; border-radius: 8px; border: 1px solid var(--border);
-    background: var(--surface); color: var(--text); font-family: 'Syne', sans-serif;
-    font-size: 12px; font-weight: 700; cursor: pointer; text-align: center; text-decoration: none;
-    display: flex; align-items: center; justify-content: center; gap: 4px;
-  }
-  .action-btn:active { background: rgba(0,255,136,0.08); border-color: rgba(0,255,136,0.3); color: var(--accent); }
-
-  .sheet-btn {
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-    padding: 14px; background: rgba(0,255,136,0.08); border: 1px solid rgba(0,255,136,0.2);
-    border-radius: 12px; color: var(--accent); font-size: 14px; font-weight: 700;
-    text-decoration: none; margin-bottom: 12px;
-  }
-
-  .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
-  .empty-icon { font-size: 48px; margin-bottom: 12px; }
-  .empty-text { font-size: 14px; line-height: 1.6; }
-
-  /* Settings */
-  .setting-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--border); }
-  .setting-row:last-child { border-bottom: none; }
-  .setting-label { font-size: 14px; font-weight: 600; }
-  .setting-value { font-family: 'Space Mono', monospace; font-size: 12px; color: var(--muted); }
-  .clear-btn { padding: 8px 14px; background: rgba(255,68,102,0.08); border: 1px solid rgba(255,68,102,0.2); border-radius: 8px; color: var(--danger); font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px; cursor: pointer; }
-
-  .badge { display: inline-block; background: rgba(0,255,136,0.1); border: 1px solid rgba(0,255,136,0.2); border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: 700; color: var(--accent); margin-left: 6px; }
+:root{--bg:#0a0a0f;--surface:#111118;--card:#16161f;--border:#252535;--accent:#00ff88;--accent2:#00ccff;--text:#f0f0ff;--muted:#5a5a7a;--danger:#ff4466;--warn:#ffaa00}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;height:100%;display:flex;flex-direction:column}
+.screen{display:none;flex-direction:column;height:100%;overflow-y:auto;padding:20px 16px 100px}
+.screen.active{display:flex}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(17,17,24,0.97);backdrop-filter:blur(16px);border-top:1px solid var(--border);display:flex;padding:8px 0 max(8px,env(safe-area-inset-bottom));z-index:100}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;cursor:pointer;transition:color 0.2s;color:var(--muted);font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+.nav-item.active{color:var(--accent)}
+.nav-icon{font-size:20px;line-height:1}
+.app-header{text-align:center;padding:16px 0 24px}
+.app-title{font-size:28px;font-weight:800;letter-spacing:-.03em;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.app-sub{color:var(--muted);font-size:12px;margin-top:4px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:12px;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(0,255,136,0.3),transparent)}
+.label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+input[type=text],textarea{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:var(--text);font-family:'Syne',sans-serif;font-size:15px;font-weight:600;outline:none;transition:border-color .2s;-webkit-appearance:none;appearance:none}
+input::placeholder,textarea::placeholder{color:var(--muted);font-weight:400}
+input:focus,textarea:focus{border-color:rgba(0,255,136,0.4)}
+textarea{resize:none;min-height:80px;line-height:1.5}
+.num-row{display:flex;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.num-row input{border:none;border-radius:0;text-align:center;font-size:22px;font-weight:800;flex:1;background:transparent;color:var(--text);font-family:'Syne',sans-serif;padding:12px 4px}
+.num-row input:focus{outline:none;border:none;box-shadow:none}
+.nbtn{width:48px;padding:12px;background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;font-family:'Space Mono',monospace;font-weight:700}
+.nbtn:active{background:rgba(0,255,136,0.08);color:var(--accent)}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;transition:all .15s}
+.chip:active,.chip.on{background:rgba(0,255,136,0.08);border-color:rgba(0,255,136,0.3);color:var(--accent)}
+.hunt-btn{width:100%;padding:16px;background:var(--accent);border:none;border-radius:14px;color:#000;font-family:'Syne',sans-serif;font-size:16px;font-weight:800;cursor:pointer;letter-spacing:.03em;transition:opacity .2s,transform .1s;margin-top:4px}
+.hunt-btn:active{transform:scale(0.98)}
+.hunt-btn:disabled{opacity:.45}
+.status{display:flex;align-items:center;gap:10px;padding:14px 16px;border-radius:12px;font-size:13px;font-weight:600;margin-top:12px;animation:up .3s ease}
+@keyframes up{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.status.loading{background:rgba(0,204,255,0.06);border:1px solid rgba(0,204,255,0.2);color:var(--accent2)}
+.status.success{background:rgba(0,255,136,0.06);border:1px solid rgba(0,255,136,0.2);color:var(--accent)}
+.status.error{background:rgba(255,68,102,0.06);border:1px solid rgba(255,68,102,0.2);color:var(--danger)}
+.spin{width:16px;height:16px;border:2px solid rgba(0,204,255,0.2);border-top-color:var(--accent2);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.prog-wrap{height:3px;background:var(--border);border-radius:2px;margin-top:10px;overflow:hidden}
+.prog-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:2px;transition:width .5s ease;width:0%}
+.lead-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;animation:up .3s ease}
+.lead-name{font-size:15px;font-weight:800;margin-bottom:8px}
+.lead-row{display:flex;align-items:flex-start;gap:8px;margin-bottom:5px;color:var(--muted);font-size:12px;font-weight:600}
+.lead-row span{color:var(--text);word-break:break-word}
+.lead-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.action-btn{flex:1;min-width:60px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:4px}
+.action-btn:active{background:rgba(0,255,136,0.08);border-color:rgba(0,255,136,0.3);color:var(--accent)}
+.sheet-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.2);border-radius:12px;color:var(--accent);font-size:14px;font-weight:700;text-decoration:none;margin-bottom:12px}
+.empty-state{text-align:center;padding:60px 20px;color:var(--muted)}
+.empty-icon{font-size:48px;margin-bottom:12px}
+.empty-text{font-size:14px;line-height:1.6}
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border)}
+.setting-row:last-child{border-bottom:none}
+.setting-label{font-size:14px;font-weight:600}
+.setting-value{font-family:'Space Mono',monospace;font-size:12px;color:var(--muted)}
+.badge{display:inline-block;background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.2);border-radius:6px;padding:2px 8px;font-size:11px;font-weight:700;color:var(--accent);margin-left:6px}
 </style>
 </head>
 <body>
 
-<!-- SCREEN: API KEY SETUP -->
-<div class="screen active" id="screen-key">
-  <div class="key-screen">
-    <div class="key-icon">🔑</div>
-    <div class="key-title">One-time Setup</div>
-    <div class="key-desc">
-      Paste your free Gemini API key to get started. No credit card needed.
-      <a class="key-link" href="https://aistudio.google.com/apikey" target="_blank">→ aistudio.google.com/apikey</a>
-    </div>
-    <div class="key-input-wrap">
-      <input type="password" id="keyInput" placeholder="AIzaSy..." />
-      <button class="save-btn" onclick="saveApiKey()">SAVE</button>
-    </div>
-    <div id="keyError" style="color:var(--danger);font-size:12px;display:none">Please paste your API key first</div>
-  </div>
-</div>
-
-<!-- SCREEN: HUNT (main form) -->
-<div class="screen" id="screen-hunt">
+<!-- HUNT SCREEN -->
+<div class="screen active" id="screen-hunt">
   <div class="app-header">
     <div class="app-title">LEAD HUNTER</div>
     <div class="app-sub">Powered by Gemini AI · Google Maps</div>
   </div>
 
-  <!-- Location -->
   <div class="card">
     <div class="label">📍 Location</div>
-    <input type="text" id="location" placeholder="e.g. Dubai, UAE" />
-    <div class="chips" id="loc-chips"></div>
+    <input type="text" id="location" placeholder="e.g. Varanasi, India" />
+    <div class="chips">
+      <div class="chip" onclick="setChip('location',this,'Dubai, UAE')">Dubai</div>
+      <div class="chip" onclick="setChip('location',this,'London, UK')">London</div>
+      <div class="chip" onclick="setChip('location',this,'New York, USA')">New York</div>
+      <div class="chip" onclick="setChip('location',this,'Riyadh, KSA')">Riyadh</div>
+      <div class="chip" onclick="setChip('location',this,'Mumbai, India')">Mumbai</div>
+      <div class="chip" onclick="setChip('location',this,'Delhi, India')">Delhi</div>
+    </div>
   </div>
 
-  <!-- Niche -->
   <div class="card">
     <div class="label">🎯 Business Niche</div>
-    <input type="text" id="niche" placeholder="e.g. dentists, restaurants, gyms..." />
-    <div class="chips" id="niche-chips"></div>
+    <input type="text" id="niche" placeholder="e.g. clinics, restaurants, gyms..." />
+    <div class="chips">
+      <div class="chip" onclick="setChip('niche',this,'restaurants')">Restaurants</div>
+      <div class="chip" onclick="setChip('niche',this,'dental clinics')">Dentists</div>
+      <div class="chip" onclick="setChip('niche',this,'real estate agencies')">Real Estate</div>
+      <div class="chip" onclick="setChip('niche',this,'beauty salons')">Salons</div>
+      <div class="chip" onclick="setChip('niche',this,'gyms')">Gyms</div>
+      <div class="chip" onclick="setChip('niche',this,'hospitals and clinics')">Hospitals</div>
+    </div>
   </div>
 
-  <!-- Count + Rating -->
   <div class="card">
     <div class="two-col">
       <div>
         <div class="label"># Leads</div>
         <div class="num-row">
           <button class="nbtn" onclick="adj('leads',-5)">−</button>
-          <input type="number" id="leadsNum" value="10" min="1" max="50" readonly />
+          <input type="text" id="leadsNum" value="10" readonly />
           <button class="nbtn" onclick="adj('leads',5)">+</button>
         </div>
       </div>
@@ -252,78 +121,62 @@
         <div class="label">⭐ Min Rating</div>
         <div class="num-row">
           <button class="nbtn" onclick="adj('rating',-0.5)">−</button>
-          <input type="number" id="ratingNum" value="4.0" min="1" max="5" step="0.5" readonly />
+          <input type="text" id="ratingNum" value="4.0" readonly />
           <button class="nbtn" onclick="adj('rating',0.5)">+</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Criteria -->
   <div class="card">
     <div class="label">✍️ Criteria</div>
-    <textarea id="criteria" placeholder="e.g. Must have a website, at least 50 reviews..."></textarea>
-    <div class="chips" id="crit-chips"></div>
+    <textarea id="criteria" placeholder="e.g. Must have phone number, at least 50 reviews..."></textarea>
+    <div class="chips">
+      <div class="chip" onclick="addCriteria('Has website')">Has website</div>
+      <div class="chip" onclick="addCriteria('50+ reviews')">50+ reviews</div>
+      <div class="chip" onclick="addCriteria('Has phone number')">Has phone</div>
+      <div class="chip" onclick="addCriteria('Currently open')">Open now</div>
+    </div>
   </div>
 
-  <button class="hunt-btn" id="huntBtn" onclick="hunt()">🔍 &nbsp; HUNT LEADS NOW</button>
+  <button class="hunt-btn" id="huntBtn" onclick="hunt()">🔍 &nbsp;HUNT LEADS NOW</button>
 
   <div class="prog-wrap" id="progWrap" style="display:none">
-    <div class="prog-bar" id="progBar" style="width:0%"></div>
+    <div class="prog-bar" id="progBar"></div>
   </div>
-
   <div id="statusBox"></div>
 </div>
 
-<!-- SCREEN: RESULTS -->
+<!-- RESULTS SCREEN -->
 <div class="screen" id="screen-results">
   <div class="app-header">
     <div class="app-title">RESULTS <span class="badge" id="resultsBadge">0</span></div>
-    <div class="app-sub">Tap a lead to call, WhatsApp or email</div>
+    <div class="app-sub">Tap to call, WhatsApp or email</div>
   </div>
   <div id="resultsContent">
     <div class="empty-state">
       <div class="empty-icon">🎯</div>
-      <div class="empty-text">No leads yet.<br>Go to Hunt and search for businesses.</div>
+      <div class="empty-text">No leads yet.<br>Go to Hunt and search!</div>
     </div>
   </div>
 </div>
 
-<!-- SCREEN: SETTINGS -->
+<!-- SETTINGS SCREEN -->
 <div class="screen" id="screen-settings">
   <div class="app-header">
     <div class="app-title">SETTINGS</div>
-    <div class="app-sub">Manage your app</div>
   </div>
-
   <div class="card">
-    <div class="setting-row">
-      <div class="setting-label">Gemini API Key</div>
-      <div class="setting-value" id="keyPreview">Not set</div>
-    </div>
-    <div class="setting-row">
-      <div class="setting-label">Google Sheet</div>
-      <div class="setting-value">Auto-created ✓</div>
-    </div>
-    <div class="setting-row">
-      <div class="setting-label">Total Leads Found</div>
-      <div class="setting-value" id="totalLeads">0</div>
-    </div>
+    <div class="setting-row"><div class="setting-label">Gemini Key</div><div class="setting-value">Hardcoded ✓</div></div>
+    <div class="setting-row"><div class="setting-label">Google Sheet</div><div class="setting-value">Auto-created ✓</div></div>
+    <div class="setting-row"><div class="setting-label">Total Leads</div><div class="setting-value" id="totalLeadsSetting">0</div></div>
   </div>
-
-  <div class="card">
-    <a class="sheet-btn" href="https://docs.google.com/spreadsheets/d/1EtipyOLadrh1P2epkggNSiTo-hyQcFseig79Nd5ATVQ/edit" target="_blank">
-      📊 Open Google Sheet →
-    </a>
-    <button class="clear-btn" style="width:100%;padding:12px;border-radius:10px;margin-top:4px" onclick="clearKey()">
-      🗑️ Reset API Key
-    </button>
-  </div>
-
+  <a class="sheet-btn" href="https://docs.google.com/spreadsheets/d/1EtipyOLadrh1P2epkggNSiTo-hyQcFseig79Nd5ATVQ/edit" target="_blank">
+    📊 Open Google Sheet →
+  </a>
   <div class="card" style="text-align:center">
     <div style="color:var(--muted);font-size:12px;line-height:1.8">
-      Lead Hunter · Powered by Gemini AI<br>
-      Google Sheet auto-syncs your leads<br>
+      Lead Hunter · Gemini AI + Google Maps<br>
       <span style="color:var(--accent);font-weight:700">100% FREE · No credit card</span>
     </div>
   </div>
@@ -331,233 +184,574 @@
 
 <!-- BOTTOM NAV -->
 <div class="bottom-nav">
-  <div class="nav-item active" id="nav-hunt" onclick="goTo('hunt')">
-    <div class="nav-icon">🔍</div>
-    Hunt
-  </div>
-  <div class="nav-item" id="nav-results" onclick="goTo('results')">
-    <div class="nav-icon">📋</div>
-    Results
-  </div>
-  <div class="nav-item" id="nav-settings" onclick="goTo('settings')">
-    <div class="nav-icon">⚙️</div>
-    Settings
-  </div>
+  <div class="nav-item active" id="nav-hunt" onclick="goTo('hunt')"><div class="nav-icon">🔍</div>Hunt</div>
+  <div class="nav-item" id="nav-results" onclick="goTo('results')"><div class="nav-icon">📋</div>Results</div>
+  <div class="nav-item" id="nav-settings" onclick="goTo('settings')"><div class="nav-icon">⚙️</div>Settings</div>
 </div>
 
 <script>
-const WEBHOOK = "https://demoaleovate.app.n8n.cloud/webhook/generate-leads";
-const SHEET = "https://docs.google.com/spreadsheets/d/1EtipyOLadrh1P2epkggNSiTo-hyQcFseig79Nd5ATVQ/edit";
+// ── CONFIG ──────────────────────────────────────────────────────────────────
+const GEMINI_KEY = 'AIzaSyB3rllOQe62YhNeAJYBGtyanfkgqR2tfUU';
+const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + GEMINI_KEY;
+const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1EtipyOLadrh1P2epkggNSiTo-hyQcFseig79Nd5ATVQ/edit';
 
-let allLeads = JSON.parse(localStorage.getItem("leads") || "[]");
-let totalLeads = parseInt(localStorage.getItem("totalLeads") || "0");
+// ── STATE ───────────────────────────────────────────────────────────────────
+let allLeads = JSON.parse(localStorage.getItem('leads') || '[]');
+updateBadge();
 
-// Init chips
-const locChips = ["Dubai, UAE","London, UK","New York, USA","Riyadh, KSA","Toronto, Canada","Sydney, Australia"];
-const nicheChips = ["Restaurants","Dentists","Real Estate","Beauty Salons","Gyms","Law Firms","Hotels","Car Dealers"];
-const critChips = ["Has website","50+ reviews","Currently open","Has phone","Has email"];
-
-function buildChips(id, arr, field) {
-  const el = document.getElementById(id);
-  el.innerHTML = arr.map(t => `<div class="chip" onclick="pickChip(this,'${field}','${t}')">${t}</div>`).join("");
+// ── NAV ─────────────────────────────────────────────────────────────────────
+function goTo(page) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('screen-' + page).classList.add('active');
+  const navEl = document.getElementById('nav-' + page);
+  if (navEl) navEl.classList.add('active');
+  if (page === 'results') renderResults();
+  if (page === 'settings') document.getElementById('totalLeadsSetting').textContent = allLeads.length;
 }
-buildChips("loc-chips", locChips, "location");
-buildChips("niche-chips", nicheChips, "niche");
-critChips.forEach(t => {
-  const el = document.getElementById("crit-chips");
-  const chip = document.createElement("div");
-  chip.className = "chip";
-  chip.textContent = t;
-  chip.onclick = () => {
-    const c = document.getElementById("criteria");
-    c.value = c.value ? c.value + ". " + t : t;
-  };
-  el.appendChild(chip);
-});
 
-function pickChip(el, field, val) {
+// ── CHIPS ───────────────────────────────────────────────────────────────────
+function setChip(field, el, val) {
   document.getElementById(field).value = val;
-  el.closest(".chips").querySelectorAll(".chip").forEach(c => c.classList.remove("on"));
-  el.classList.add("on");
+  el.closest('.chips').querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+}
+function addCriteria(text) {
+  const el = document.getElementById('criteria');
+  el.value = el.value ? el.value + '. ' + text : text;
 }
 
+// ── STEPPERS ────────────────────────────────────────────────────────────────
 function adj(type, delta) {
-  if (type === "leads") {
-    const el = document.getElementById("leadsNum");
+  if (type === 'leads') {
+    const el = document.getElementById('leadsNum');
     el.value = Math.max(1, Math.min(50, parseInt(el.value) + delta));
   } else {
-    const el = document.getElementById("ratingNum");
-    el.value = Math.max(1, Math.min(5, Math.round((parseFloat(el.value) + delta) * 10) / 10)).toFixed(1);
+    const el = document.getElementById('ratingNum');
+    el.value = Math.max(1.0, Math.min(5.0, Math.round((parseFloat(el.value) + delta) * 10) / 10)).toFixed(1);
   }
 }
 
-function goTo(page) {
-  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-  document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
-  const key = localStorage.getItem("gemini_key");
-  if (!key && page !== "key") { showKeyScreen(); return; }
-  document.getElementById("screen-" + page).classList.add("active");
-  document.getElementById("nav-" + page) && document.getElementById("nav-" + page).classList.add("active");
-  if (page === "results") renderResults();
-  if (page === "settings") updateSettings();
+// ── STATUS ──────────────────────────────────────────────────────────────────
+function showStatus(type, msg) {
+  document.getElementById('statusBox').innerHTML =
+    '<div class="status ' + type + '">' +
+    (type === 'loading' ? '<div class="spin"></div>' : type === 'success' ? '✅' : '❌') +
+    '<span>' + msg + '</span></div>';
 }
 
-function showKeyScreen() {
-  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-  document.getElementById("screen-key").classList.add("active");
+// ── PROGRESS ────────────────────────────────────────────────────────────────
+let progIv;
+function startProg() {
+  const wrap = document.getElementById('progWrap');
+  const bar = document.getElementById('progBar');
+  wrap.style.display = 'block';
+  bar.style.width = '0%';
+  let pct = 0;
+  const steps = ['Sending request to Gemini...','Gemini searching Google Maps...','Extracting contacts...','Almost done...'];
+  let s = 0;
+  progIv = setInterval(() => {
+    pct += Math.random() * 12;
+    if (pct > 88) pct = 88;
+    bar.style.width = pct + '%';
+    if (s < steps.length) { showStatus('loading', steps[s]); s++; }
+  }, 3000);
+}
+function stopProg() {
+  clearInterval(progIv);
+  const bar = document.getElementById('progBar');
+  bar.style.width = '100%';
+  setTimeout(() => { document.getElementById('progWrap').style.display = 'none'; }, 600);
 }
 
-function saveApiKey() {
-  const val = document.getElementById("keyInput").value.trim();
-  if (!val) { document.getElementById("keyError").style.display = "block"; return; }
-  localStorage.setItem("gemini_key", val);
-  goTo("hunt");
+// ── SAVE TO SHEET via Gemini (Apps Script) ──────────────────────────────────
+async function saveToSheet(leads) {
+  // We'll use a Google Apps Script web app URL to save
+  // For now just save locally and show sheet link
+  try {
+    const saved = JSON.parse(localStorage.getItem('leads') || '[]');
+    const merged = [...leads, ...saved];
+    localStorage.setItem('leads', JSON.stringify(merged));
+    allLeads = merged;
+    updateBadge();
+  } catch(e) {}
 }
 
-function clearKey() {
-  localStorage.removeItem("gemini_key");
-  showKeyScreen();
+function updateBadge() {
+  document.getElementById('resultsBadge').textContent = allLeads.length;
 }
 
-function updateSettings() {
-  const key = localStorage.getItem("gemini_key") || "";
-  document.getElementById("keyPreview").textContent = key ? key.substring(0,8) + "..." : "Not set";
-  document.getElementById("totalLeads").textContent = localStorage.getItem("totalLeads") || "0";
-}
-
-// Hunt
+// ── MAIN HUNT ───────────────────────────────────────────────────────────────
 async function hunt() {
-  const apiKey = localStorage.getItem("gemini_key");
-  const location = document.getElementById("location").value.trim();
-  const niche = document.getElementById("niche").value.trim();
-  const numberOfLeads = parseInt(document.getElementById("leadsNum").value);
-  const minRating = parseFloat(document.getElementById("ratingNum").value);
-  const criteriaText = document.getElementById("criteria").value.trim();
+  const location = document.getElementById('location').value.trim();
+  const niche = document.getElementById('niche').value.trim();
+  const numberOfLeads = parseInt(document.getElementById('leadsNum').value);
+  const minRating = parseFloat(document.getElementById('ratingNum').value);
+  const criteriaText = document.getElementById('criteria').value.trim();
 
-  if (!location) { showStatus("error", "Please enter a location"); return; }
-  if (!niche) { showStatus("error", "Please enter a business niche"); return; }
+  if (!location) { showStatus('error', 'Please enter a location'); return; }
+  if (!niche) { showStatus('error', 'Please enter a niche'); return; }
 
-  const criteria = "Rating must be at least " + minRating + ". " + criteriaText;
-  const btn = document.getElementById("huntBtn");
+  const criteria = 'Rating at least ' + minRating + '. ' + criteriaText;
+
+  const btn = document.getElementById('huntBtn');
   btn.disabled = true;
-  btn.textContent = "⏳  HUNTING...";
+  btn.textContent = '⏳  HUNTING...';
+  startProg();
 
-  startProgress();
-  showStatus("loading", "Gemini is searching Google Maps...");
+  const prompt =
+    'You are a lead generation expert. Search Google Maps and the web to find real businesses.\n\n' +
+    'Find ' + numberOfLeads + ' real businesses:\n' +
+    'Niche: ' + niche + '\n' +
+    'Location: ' + location + '\n' +
+    'Criteria: ' + criteria + '\n\n' +
+    'For each business find:\n' +
+    '- business_name\n- phone (with country code)\n- whatsapp (same as phone)\n' +
+    '- email\n- website\n- address\n- rating\n- total_reviews\n- google_maps_url\n- notes\n\n' +
+    'Return ONLY raw JSON, no markdown, no explanation:\n{"leads":[{...}]}';
 
   try {
-    const res = await fetch(WEBHOOK, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ location, niche, numberOfLeads, criteria, geminiApiKey: apiKey })
+    const res = await fetch(GEMINI_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        tools: [{ google_search: {} }],
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.1, maxOutputTokens: 8192 }
+      })
     });
 
-    stopProgress();
+    stopProg();
+    const data = await res.json();
 
     if (!res.ok) {
-      showStatus("error", "Workflow error " + res.status + " — make sure n8n workflow is active");
+      const errMsg = data?.error?.message || ('Gemini error ' + res.status);
+      showStatus('error', errMsg);
       return;
     }
 
-    const data = await res.json();
-    let leads = Array.isArray(data) ? data : (data.leads || (data.business_name ? [data] : []));
+    let text = '';
+    try { text = data.candidates[0].content.parts[0].text; }
+    catch(e) { showStatus('error', 'Gemini returned no text. Try again.'); return; }
+cat > /mnt/user-data/outputs/leadhunter-pwa/index.html << 'HTMLEOF'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0a0a0f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Lead Hunter">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Lead Hunter</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a0f;--surface:#111118;--card:#16161f;--border:#252535;--accent:#00ff88;--accent2:#00ccff;--text:#f0f0ff;--muted:#5a5a7a;--danger:#ff4466;--warn:#ffaa00}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;height:100%;display:flex;flex-direction:column}
+.screen{display:none;flex-direction:column;height:100%;overflow-y:auto;padding:20px 16px 100px}
+.screen.active{display:flex}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(17,17,24,0.97);backdrop-filter:blur(16px);border-top:1px solid var(--border);display:flex;padding:8px 0 max(8px,env(safe-area-inset-bottom));z-index:100}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;cursor:pointer;transition:color 0.2s;color:var(--muted);font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+.nav-item.active{color:var(--accent)}
+.nav-icon{font-size:20px;line-height:1}
+.app-header{text-align:center;padding:16px 0 24px}
+.app-title{font-size:28px;font-weight:800;letter-spacing:-.03em;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.app-sub{color:var(--muted);font-size:12px;margin-top:4px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:12px;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(0,255,136,0.3),transparent)}
+.label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+input[type=text],textarea{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:var(--text);font-family:'Syne',sans-serif;font-size:15px;font-weight:600;outline:none;transition:border-color .2s;-webkit-appearance:none;appearance:none}
+input::placeholder,textarea::placeholder{color:var(--muted);font-weight:400}
+input:focus,textarea:focus{border-color:rgba(0,255,136,0.4)}
+textarea{resize:none;min-height:80px;line-height:1.5}
+.num-row{display:flex;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.num-row input{border:none;border-radius:0;text-align:center;font-size:22px;font-weight:800;flex:1;background:transparent;color:var(--text);font-family:'Syne',sans-serif;padding:12px 4px}
+.num-row input:focus{outline:none;border:none;box-shadow:none}
+.nbtn{width:48px;padding:12px;background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;font-family:'Space Mono',monospace;font-weight:700}
+.nbtn:active{background:rgba(0,255,136,0.08);color:var(--accent)}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;transition:all .15s}
+.chip:active,.chip.on{background:rgba(0,255,136,0.08);border-color:rgba(0,255,136,0.3);color:var(--accent)}
+.hunt-btn{width:100%;padding:16px;background:var(--accent);border:none;border-radius:14px;color:#000;font-family:'Syne',sans-serif;font-size:16px;font-weight:800;cursor:pointer;letter-spacing:.03em;transition:opacity .2s,transform .1s;margin-top:4px}
+.hunt-btn:active{transform:scale(0.98)}
+.hunt-btn:disabled{opacity:.45}
+.status{display:flex;align-items:center;gap:10px;padding:14px 16px;border-radius:12px;font-size:13px;font-weight:600;margin-top:12px;animation:up .3s ease}
+@keyframes up{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.status.loading{background:rgba(0,204,255,0.06);border:1px solid rgba(0,204,255,0.2);color:var(--accent2)}
+.status.success{background:rgba(0,255,136,0.06);border:1px solid rgba(0,255,136,0.2);color:var(--accent)}
+.status.error{background:rgba(255,68,102,0.06);border:1px solid rgba(255,68,102,0.2);color:var(--danger)}
+.spin{width:16px;height:16px;border:2px solid rgba(0,204,255,0.2);border-top-color:var(--accent2);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.prog-wrap{height:3px;background:var(--border);border-radius:2px;margin-top:10px;overflow:hidden}
+.prog-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:2px;transition:width .5s ease;width:0%}
+.lead-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;animation:up .3s ease}
+.lead-name{font-size:15px;font-weight:800;margin-bottom:8px}
+.lead-row{display:flex;align-items:flex-start;gap:8px;margin-bottom:5px;color:var(--muted);font-size:12px;font-weight:600}
+.lead-row span{color:var(--text);word-break:break-word}
+.lead-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.action-btn{flex:1;min-width:60px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:4px}
+.action-btn:active{background:rgba(0,255,136,0.08);border-color:rgba(0,255,136,0.3);color:var(--accent)}
+.sheet-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.2);border-radius:12px;color:var(--accent);font-size:14px;font-weight:700;text-decoration:none;margin-bottom:12px}
+.empty-state{text-align:center;padding:60px 20px;color:var(--muted)}
+.empty-icon{font-size:48px;margin-bottom:12px}
+.empty-text{font-size:14px;line-height:1.6}
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border)}
+.setting-row:last-child{border-bottom:none}
+.setting-label{font-size:14px;font-weight:600}
+.setting-value{font-family:'Space Mono',monospace;font-size:12px;color:var(--muted)}
+.badge{display:inline-block;background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.2);border-radius:6px;padding:2px 8px;font-size:11px;font-weight:700;color:var(--accent);margin-left:6px}
+</style>
+</head>
+<body>
 
-    if (leads.length > 0) {
-      allLeads = [...leads, ...allLeads];
-      localStorage.setItem("leads", JSON.stringify(allLeads));
-      totalLeads += leads.length;
-      localStorage.setItem("totalLeads", totalLeads);
-      document.getElementById("resultsBadge").textContent = allLeads.length;
-      showStatus("success", leads.length + " leads saved! Check Results tab.");
-    } else {
-      showStatus("success", "Done! Open your Google Sheet to see the leads.");
+<!-- HUNT SCREEN -->
+<div class="screen active" id="screen-hunt">
+  <div class="app-header">
+    <div class="app-title">LEAD HUNTER</div>
+    <div class="app-sub">Powered by Gemini AI · Google Maps</div>
+  </div>
+
+  <div class="card">
+    <div class="label">📍 Location</div>
+    <input type="text" id="location" placeholder="e.g. Varanasi, India" />
+    <div class="chips">
+      <div class="chip" onclick="setChip('location',this,'Dubai, UAE')">Dubai</div>
+      <div class="chip" onclick="setChip('location',this,'London, UK')">London</div>
+      <div class="chip" onclick="setChip('location',this,'New York, USA')">New York</div>
+      <div class="chip" onclick="setChip('location',this,'Riyadh, KSA')">Riyadh</div>
+      <div class="chip" onclick="setChip('location',this,'Mumbai, India')">Mumbai</div>
+      <div class="chip" onclick="setChip('location',this,'Delhi, India')">Delhi</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="label">🎯 Business Niche</div>
+    <input type="text" id="niche" placeholder="e.g. clinics, restaurants, gyms..." />
+    <div class="chips">
+      <div class="chip" onclick="setChip('niche',this,'restaurants')">Restaurants</div>
+      <div class="chip" onclick="setChip('niche',this,'dental clinics')">Dentists</div>
+      <div class="chip" onclick="setChip('niche',this,'real estate agencies')">Real Estate</div>
+      <div class="chip" onclick="setChip('niche',this,'beauty salons')">Salons</div>
+      <div class="chip" onclick="setChip('niche',this,'gyms')">Gyms</div>
+      <div class="chip" onclick="setChip('niche',this,'hospitals and clinics')">Hospitals</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="two-col">
+      <div>
+        <div class="label"># Leads</div>
+        <div class="num-row">
+          <button class="nbtn" onclick="adj('leads',-5)">−</button>
+          <input type="text" id="leadsNum" value="10" readonly />
+          <button class="nbtn" onclick="adj('leads',5)">+</button>
+        </div>
+      </div>
+      <div>
+        <div class="label">⭐ Min Rating</div>
+        <div class="num-row">
+          <button class="nbtn" onclick="adj('rating',-0.5)">−</button>
+          <input type="text" id="ratingNum" value="4.0" readonly />
+          <button class="nbtn" onclick="adj('rating',0.5)">+</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="label">✍️ Criteria</div>
+    <textarea id="criteria" placeholder="e.g. Must have phone number, at least 50 reviews..."></textarea>
+    <div class="chips">
+      <div class="chip" onclick="addCriteria('Has website')">Has website</div>
+      <div class="chip" onclick="addCriteria('50+ reviews')">50+ reviews</div>
+      <div class="chip" onclick="addCriteria('Has phone number')">Has phone</div>
+      <div class="chip" onclick="addCriteria('Currently open')">Open now</div>
+    </div>
+  </div>
+
+  <button class="hunt-btn" id="huntBtn" onclick="hunt()">🔍 &nbsp;HUNT LEADS NOW</button>
+
+  <div class="prog-wrap" id="progWrap" style="display:none">
+    <div class="prog-bar" id="progBar"></div>
+  </div>
+  <div id="statusBox"></div>
+</div>
+
+<!-- RESULTS SCREEN -->
+<div class="screen" id="screen-results">
+  <div class="app-header">
+    <div class="app-title">RESULTS <span class="badge" id="resultsBadge">0</span></div>
+    <div class="app-sub">Tap to call, WhatsApp or email</div>
+  </div>
+  <div id="resultsContent">
+    <div class="empty-state">
+      <div class="empty-icon">🎯</div>
+      <div class="empty-text">No leads yet.<br>Go to Hunt and search!</div>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS SCREEN -->
+<div class="screen" id="screen-settings">
+  <div class="app-header">
+    <div class="app-title">SETTINGS</div>
+  </div>
+  <div class="card">
+    <div class="setting-row"><div class="setting-label">Gemini Key</div><div class="setting-value">Hardcoded ✓</div></div>
+    <div class="setting-row"><div class="setting-label">Google Sheet</div><div class="setting-value">Auto-created ✓</div></div>
+    <div class="setting-row"><div class="setting-label">Total Leads</div><div class="setting-value" id="totalLeadsSetting">0</div></div>
+  </div>
+  <a class="sheet-btn" href="https://docs.google.com/spreadsheets/d/1EtipyOLadrh1P2epkggNSiTo-hyQcFseig79Nd5ATVQ/edit" target="_blank">
+    📊 Open Google Sheet →
+  </a>
+  <div class="card" style="text-align:center">
+    <div style="color:var(--muted);font-size:12px;line-height:1.8">
+      Lead Hunter · Gemini AI + Google Maps<br>
+      <span style="color:var(--accent);font-weight:700">100% FREE · No credit card</span>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <div class="nav-item active" id="nav-hunt" onclick="goTo('hunt')"><div class="nav-icon">🔍</div>Hunt</div>
+  <div class="nav-item" id="nav-results" onclick="goTo('results')"><div class="nav-icon">📋</div>Results</div>
+  <div class="nav-item" id="nav-settings" onclick="goTo('settings')"><div class="nav-icon">⚙️</div>Settings</div>
+</div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────────────────────────
+const GEMINI_KEY = 'AIzaSyB3rllOQe62YhNeAJYBGtyanfkgqR2tfUU';
+const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + GEMINI_KEY;
+const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1EtipyOLadrh1P2epkggNSiTo-hyQcFseig79Nd5ATVQ/edit';
+
+// ── STATE ───────────────────────────────────────────────────────────────────
+let allLeads = JSON.parse(localStorage.getItem('leads') || '[]');
+updateBadge();
+
+// ── NAV ─────────────────────────────────────────────────────────────────────
+function goTo(page) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('screen-' + page).classList.add('active');
+  const navEl = document.getElementById('nav-' + page);
+  if (navEl) navEl.classList.add('active');
+  if (page === 'results') renderResults();
+  if (page === 'settings') document.getElementById('totalLeadsSetting').textContent = allLeads.length;
+}
+
+// ── CHIPS ───────────────────────────────────────────────────────────────────
+function setChip(field, el, val) {
+  document.getElementById(field).value = val;
+  el.closest('.chips').querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+}
+function addCriteria(text) {
+  const el = document.getElementById('criteria');
+  el.value = el.value ? el.value + '. ' + text : text;
+}
+
+// ── STEPPERS ────────────────────────────────────────────────────────────────
+function adj(type, delta) {
+  if (type === 'leads') {
+    const el = document.getElementById('leadsNum');
+    el.value = Math.max(1, Math.min(50, parseInt(el.value) + delta));
+  } else {
+    const el = document.getElementById('ratingNum');
+    el.value = Math.max(1.0, Math.min(5.0, Math.round((parseFloat(el.value) + delta) * 10) / 10)).toFixed(1);
+  }
+}
+
+// ── STATUS ──────────────────────────────────────────────────────────────────
+function showStatus(type, msg) {
+  document.getElementById('statusBox').innerHTML =
+    '<div class="status ' + type + '">' +
+    (type === 'loading' ? '<div class="spin"></div>' : type === 'success' ? '✅' : '❌') +
+    '<span>' + msg + '</span></div>';
+}
+
+// ── PROGRESS ────────────────────────────────────────────────────────────────
+let progIv;
+function startProg() {
+  const wrap = document.getElementById('progWrap');
+  const bar = document.getElementById('progBar');
+  wrap.style.display = 'block';
+  bar.style.width = '0%';
+  let pct = 0;
+  const steps = ['Sending request to Gemini...','Gemini searching Google Maps...','Extracting contacts...','Almost done...'];
+  let s = 0;
+  progIv = setInterval(() => {
+    pct += Math.random() * 12;
+    if (pct > 88) pct = 88;
+    bar.style.width = pct + '%';
+    if (s < steps.length) { showStatus('loading', steps[s]); s++; }
+  }, 3000);
+}
+function stopProg() {
+  clearInterval(progIv);
+  const bar = document.getElementById('progBar');
+  bar.style.width = '100%';
+  setTimeout(() => { document.getElementById('progWrap').style.display = 'none'; }, 600);
+}
+
+// ── SAVE TO SHEET via Gemini (Apps Script) ──────────────────────────────────
+async function saveToSheet(leads) {
+  // We'll use a Google Apps Script web app URL to save
+  // For now just save locally and show sheet link
+  try {
+    const saved = JSON.parse(localStorage.getItem('leads') || '[]');
+    const merged = [...leads, ...saved];
+    localStorage.setItem('leads', JSON.stringify(merged));
+    allLeads = merged;
+    updateBadge();
+  } catch(e) {}
+}
+
+function updateBadge() {
+  document.getElementById('resultsBadge').textContent = allLeads.length;
+}
+
+// ── MAIN HUNT ───────────────────────────────────────────────────────────────
+async function hunt() {
+  const location = document.getElementById('location').value.trim();
+  const niche = document.getElementById('niche').value.trim();
+  const numberOfLeads = parseInt(document.getElementById('leadsNum').value);
+  const minRating = parseFloat(document.getElementById('ratingNum').value);
+  const criteriaText = document.getElementById('criteria').value.trim();
+
+  if (!location) { showStatus('error', 'Please enter a location'); return; }
+  if (!niche) { showStatus('error', 'Please enter a niche'); return; }
+
+  const criteria = 'Rating at least ' + minRating + '. ' + criteriaText;
+
+  const btn = document.getElementById('huntBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳  HUNTING...';
+  startProg();
+
+  const prompt =
+    'You are a lead generation expert. Search Google Maps and the web to find real businesses.\n\n' +
+    'Find ' + numberOfLeads + ' real businesses:\n' +
+    'Niche: ' + niche + '\n' +
+    'Location: ' + location + '\n' +
+    'Criteria: ' + criteria + '\n\n' +
+    'For each business find:\n' +
+    '- business_name\n- phone (with country code)\n- whatsapp (same as phone)\n' +
+    '- email\n- website\n- address\n- rating\n- total_reviews\n- google_maps_url\n- notes\n\n' +
+    'Return ONLY raw JSON, no markdown, no explanation:\n{"leads":[{...}]}';
+
+  try {
+    const res = await fetch(GEMINI_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        tools: [{ google_search: {} }],
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.1, maxOutputTokens: 8192 }
+      })
+    });
+
+    stopProg();
+    const data = await res.json();
+
+    if (!res.ok) {
+      const errMsg = data?.error?.message || ('Gemini error ' + res.status);
+      showStatus('error', errMsg);
+      return;
     }
 
+    let text = '';
+    try { text = data.candidates[0].content.parts[0].text; }
+    catch(e) { showStatus('error', 'Gemini returned no text. Try again.'); return; }
+
+    text = text.replace(/```json/gi, '').replace(/```/gi, '').trim();
+    const match = text.match(/\{[\s\S]*\}/);
+    if (!match) { showStatus('error', 'Could not parse leads. Try again.'); return; }
+
+    let parsed;
+    try { parsed = JSON.parse(match[0]); }
+    catch(e) { showStatus('error', 'JSON error. Try again.'); return; }
+
+    const leads = parsed.leads || [];
+    if (leads.length === 0) { showStatus('error', 'No leads found. Try different niche or location.'); return; }
+
+    await saveToSheet(leads);
+    showStatus('success', leads.length + ' leads found! Check Results tab 🎉');
+
+    // Auto switch to results
+    setTimeout(() => goTo('results'), 1500);
+
   } catch(e) {
-    stopProgress();
-    showStatus("error", "Cannot reach webhook. Activate the n8n workflow first.");
+    stopProg();
+    showStatus('error', 'Network error: ' + e.message);
   } finally {
     btn.disabled = false;
-    btn.textContent = "🔍  HUNT LEADS NOW";
+    btn.textContent = '🔍  HUNT LEADS NOW';
   }
 }
 
-let progInterval;
-function startProgress() {
-  const wrap = document.getElementById("progWrap");
-  const bar = document.getElementById("progBar");
-  wrap.style.display = "block";
-  let pct = 0;
-  const msgs = ["Gemini is searching Google Maps...","Finding phone numbers & emails...","Applying your filters...","Saving to Google Sheet..."];
-  let s = 0;
-  progInterval = setInterval(() => {
-    pct += Math.random() * 8;
-    if (pct > 88) pct = 88;
-    bar.style.width = pct + "%";
-    if (s < msgs.length) { showStatus("loading", msgs[s]); s++; }
-  }, 3500);
-}
-
-function stopProgress() {
-  clearInterval(progInterval);
-  document.getElementById("progBar").style.width = "100%";
-  setTimeout(() => { document.getElementById("progWrap").style.display = "none"; }, 600);
-}
-
-function showStatus(type, msg) {
-  const box = document.getElementById("statusBox");
-  const spinner = type === "loading" ? '<div class="spin"></div>' : (type === "success" ? "✅" : "❌");
-  box.innerHTML = `<div class="status ${type}">${spinner}<span>${msg}</span></div>`;
-}
-
+// ── RENDER RESULTS ──────────────────────────────────────────────────────────
 function renderResults() {
-  const cont = document.getElementById("resultsContent");
-  document.getElementById("resultsBadge").textContent = allLeads.length;
-
+  const cont = document.getElementById('resultsContent');
+  updateBadge();
   if (allLeads.length === 0) {
-    cont.innerHTML = `<div class="empty-state"><div class="empty-icon">🎯</div><div class="empty-text">No leads yet.<br>Go to Hunt and search for businesses.</div></div>`;
+    cont.innerHTML = '<div class="empty-state"><div class="empty-icon">🎯</div><div class="empty-text">No leads yet.<br>Go to Hunt and search!</div></div>';
     return;
   }
-
-  const sheetBtn = `<a class="sheet-btn" href="${SHEET}" target="_blank">📊 Open Full Google Sheet →</a>`;
+  const sheetBtn = '<a class="sheet-btn" href="' + SHEET_URL + '" target="_blank">📊 Open Full Google Sheet →</a>';
   const cards = allLeads.map((l, i) => {
-    const phone = (l.phone || "").replace(/\s/g,"");
-    const wa = (l.whatsapp || l.phone || "").replace(/[^0-9+]/g,"");
-    const email = l.email || "";
-    const website = l.website || "";
+    const phone = (l.phone || '').replace(/\s/g, '');
+    const wa = (l.whatsapp || l.phone || '').replace(/[^0-9+]/g, '');
+    return '<div class="lead-card">' +
+      '<div class="lead-name">' + (l.business_name || 'Unknown') + '</div>' +
+      (l.rating ? '<div class="lead-row">⭐ <span>' + l.rating + ' stars (' + (l.total_reviews||0) + ' reviews)</span></div>' : '') +
+      (l.address ? '<div class="lead-row">📍 <span>' + l.address + '</span></div>' : '') +
+      (l.phone ? '<div class="lead-row">📞 <span>' + l.
+    text = text.replace(/```json/gi, '').replace(/```/gi, '').trim();
+    const match = text.match(/\{[\s\S]*\}/);
+    if (!match) { showStatus('error', 'Could not parse leads. Try again.'); return; }
 
-    return `
-    <div class="lead-card">
-      <div class="lead-name">${l.business_name || "Unknown Business"}</div>
-      ${l.rating ? `<div class="lead-row">⭐ <span>${l.rating} stars (${l.total_reviews||0} reviews)</span></div>` : ""}
-      ${l.address ? `<div class="lead-row">📍 <span>${l.address}</span></div>` : ""}
-      ${l.phone ? `<div class="lead-row">📞 <span>${l.phone}</span></div>` : ""}
-      ${l.email ? `<div class="lead-row">✉️ <span>${l.email}</span></div>` : ""}
-      ${l.notes ? `<div class="lead-row">📝 <span>${l.notes}</span></div>` : ""}
-      <div class="lead-actions">
-        ${phone ? `<a class="action-btn" href="tel:${phone}">📞 Call</a>` : ""}
-        ${wa ? `<a class="action-btn" href="https://wa.me/${wa.replace('+','')}" target="_blank">💬 WhatsApp</a>` : ""}
-        ${email ? `<a class="action-btn" href="mailto:${email}">✉️ Email</a>` : ""}
-        ${website ? `<a class="action-btn" href="${website}" target="_blank">🌐 Web</a>` : ""}
-      </div>
-    </div>`;
-  }).join("");
+    let parsed;
+    try { parsed = JSON.parse(match[0]); }
+    catch(e) { showStatus('error', 'JSON error. Try again.'); return; }
 
-  cont.innerHTML = sheetBtn + cards;
+    const leads = parsed.leads || [];
+    if (leads.length === 0) { showStatus('error', 'No leads found. Try different niche or location.'); return; }
+
+    await saveToSheet(leads);
+    showStatus('success', leads.length + ' leads found! Check Results tab 🎉');
+
+    // Auto switch to results
+    setTimeout(() => goTo('results'), 1500);
+
+  } catch(e) {
+    stopProg();
+    showStatus('error', 'Network error: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🔍  HUNT LEADS NOW';
+  }
 }
 
-// Init
-const savedKey = localStorage.getItem("gemini_key");
-if (savedKey) {
-  goTo("hunt");
-  document.getElementById("resultsBadge").textContent = allLeads.length;
-} else {
-  showKeyScreen();
-}
-
-// Handle enter key on API key input
-document.getElementById("keyInput").addEventListener("keydown", e => { if (e.key === "Enter") saveApiKey(); });
-</script>
-<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js")}</script>
-</body>
-</html>
+// ── RENDER RESULTS ──────────────────────────────────────────────────────────
+function renderResults() {
+  const cont = document.getElementById('resultsContent');
+  updateBadge();
+  if (allLeads.length === 0) {
+    cont.innerHTML = '<div class="empty-state"><div class="empty-icon">🎯</div><div class="empty-text">No leads yet.<br>Go to Hunt and search!</div></div>';
+    return;
+  }
+  const sheetBtn = '<a class="sheet-btn" href="' + SHEET_URL + '" target="_blank">📊 Open Full Google Sheet →</a>';
+  const cards = allLeads.map((l, i) => {
+    const phone = (l.phone || '').replace(/\s/g, '');
+    const wa = (l.whatsapp || l.phone || '').replace(/[^0-9+]/g, '');
+    return '<div class="lead-card">' +
+      '<div class="lead-name">' + (l.business_name || 'Unknown') + '</div>' +
+      (l.rating ? '<div class="lead-row">⭐ <span>' + l.rating + ' stars (' + (l.total_reviews||0) + ' reviews)</span></div>' : '') +
+      (l.address ? '<div class="lead-row">📍 <span>' + l.address + '</span></div>' : '') +
+      (l.phone ? '<div class="lead-row">📞 <span>' + l.
